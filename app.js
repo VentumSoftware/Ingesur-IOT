@@ -7,8 +7,8 @@ const db = [];
 server.on('connection', (socket) => {
 
     const onData = (data) => {
-        console.log(`onData: ${data}`);
-        db.push(data);
+        console.log(data);
+        db.push({ts: Date.now(), raw: [...data], data: data.toString()});
         // if (data.startsWith('CMD:')) {
         //     socket.write(`CMD Recibido!`)
         // } else {
