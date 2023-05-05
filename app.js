@@ -12,7 +12,7 @@ const runIOTService = async () => {
     //IOT Socket
     server.on('connection', (socket) => {
 
-        console.log(`Address: ${socket.address}`)
+        console.log(`Address: ${socket.address()}`)
 
         const valid = (socket) => {
 
