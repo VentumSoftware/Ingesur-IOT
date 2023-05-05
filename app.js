@@ -13,7 +13,9 @@ const runIOTService = async () => {
     server.on('connection', (socket) => {
 
         console.log(`Address`)
-        console.log(socket.address())
+        //console.log(socket.address())
+        console.log(socket.remoteAddress)
+        console.log(socket.remotePort)
         const valid = (socket) => {
 
             const validIP = () => {
@@ -25,13 +27,14 @@ const runIOTService = async () => {
                 true;
                 //checkeo largo;
             }
-
+            return true;
             return validIP() && validTrama();
         }
 
         if (valid(socket)) {
             const onData = (data) => {
                 console.log(data);
+                console.log(data.toString('hex'));
                 db.push({ ts: Date.now(), raw: [...data], hex: data.toString('hex') });
                 // if (data.startsWith('CMD:')) {
                 //     socket.write(`CMD Recibido!`)
