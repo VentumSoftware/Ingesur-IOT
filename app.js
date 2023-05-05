@@ -1,40 +1,64 @@
+
 const net = require('net');
 const PORT = 4000;
 const server = net.createServer();
 const db = [];
 
-//IOT Socket
-server.on('connection', (socket) => {
+const getData = () => {
 
-    const onData = (data) => {
-        console.log(data);
-        db.push({ts: Date.now(), raw: [...data], data: data.toString()});
-        // if (data.startsWith('CMD:')) {
-        //     socket.write(`CMD Recibido!`)
-        // } else {
-        //     socket.write(`Recibido!`)
-        // }
-        socket.write(`Recibido!`)
-    }
-    const onClose = (data) => {
-        console.log(`Comunication closed!`)
-        console.log(data)
-    }
-    const onError = (err) => {
-        console.log(`Error: ${err.message}`)
-    }
+}
 
-    socket.on('data', onData);
-    socket.on('close', onClose);
-    socket.on('error', onError);
-})
+const runIOTService = async () => {
+    //IOT Socket
+    server.on('connection', (socket) => {
 
-server.listen(PORT, () => console.log(`Server listening on PORT:${PORT}`));
+        console.log(`Address: ${socket.address}`);
 
-//HTTP Socket
-const express = require('express')
-const app = express()
+        const valid = (socket) => {
 
-app.get('/', function (req, res) {res.json(db)})
+            const validIP = () => {
+                const whiteList = [];
+                return whiteList.includes(socket.remoteAddress) || true;
+            };
 
-app.listen(3000)
+            const validTrama = () => {
+                true;
+                //checkeo largo;
+            }
+
+            return validIP() && validTrama();
+        }
+
+        if (valid(socket)) {
+            const onData = (data) => {
+                console.log(data);
+                db.push({ ts: Date.now(), raw: [...data], hex: data.toString('hex') });
+                // if (data.startsWith('CMD:')) {
+                //     socket.write(`CMD Recibido!`)
+                // } else {
+                //     socket.write(`Recibido!`)
+                // }
+                socket.write(`Recibido!`)
+            }
+
+            const onError = (err) => {
+                console.log(`Error: ${err.message}`)
+            }
+
+            socket.on('data', onData);
+            //socket.on('close', onClose);
+            socket.on('error', onError);
+        }
+
+    })
+
+    server.listen(PORT, () => log.info(`IOT Server listening on port:${PORT}`));
+
+    //HTTP Socket
+    const express = require('express')
+    const app = express()
+
+    app.get('/', function (req, res) { res.send(getData()) })
+
+    app.listen(3000)
+}
