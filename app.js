@@ -60,5 +60,7 @@ const runIOTService = async () => {
 
     app.get('/', function (req, res) { res.send(getData()) })
 
-    app.listen(3000)
+    app.listen(PORT)
 }
+
+runIOTService();
