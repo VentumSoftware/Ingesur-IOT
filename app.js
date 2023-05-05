@@ -52,7 +52,7 @@ const runIOTService = async () => {
 
     })
 
-    server.listen(PORT, () => log.info(`IOT Server listening on port:${PORT}`));
+    server.listen(PORT, () => console.log(`IOT Server listening on port:${PORT}`));
 
     //HTTP Socket
     const express = require('express')
