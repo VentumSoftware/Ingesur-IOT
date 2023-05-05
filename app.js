@@ -12,7 +12,7 @@ const runIOTService = async () => {
     //IOT Socket
     server.on('connection', (socket) => {
 
-        console.log(`Address: ${socket.address}`);
+        console.log(`Address: ${socket.address}`)
 
         const valid = (socket) => {
 
@@ -52,7 +52,7 @@ const runIOTService = async () => {
 
     })
 
-    server.listen(PORT, () => console.log(`IOT Server listening on port:${PORT}`));
+    server.listen(PORT, () => log.info(`IOT Server listening on port:${PORT}`));
 
     //HTTP Socket
     const express = require('express')
@@ -60,7 +60,6 @@ const runIOTService = async () => {
 
     app.get('/', function (req, res) { res.send(getData()) })
 
-    app.listen(PORT)
+    app.listen(3000)
 }
-
 runIOTService();
