@@ -1,4 +1,4 @@
-const env = require('../../config/env');
+const env = require('../config/env.js');
 
 Reset = "\x1b[0m"
 Bright = "\x1b[1m"
