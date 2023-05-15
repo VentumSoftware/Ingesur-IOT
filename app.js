@@ -55,7 +55,7 @@ const runIOTService = async () => {
                 const parsedData = parseData(hexData);
                 if (parsedData) {
                     log.warn(parsedData);
-                    await sql.add('Mensajes', { IMEI: parsedData.IMEI, Timestamp: Date.now(), Codigo: parsedData.codigo, Raw: hexData });
+                    await sql.add('Mensajes', { IMEI: parsedData.IMEI, Timestamp: Date.now(), Codigo: hexData.slice(78,2), Raw: hexData });
                     socket.write(`OK`);
                 }
             }
