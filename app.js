@@ -9,8 +9,12 @@ const WHITELIST = ['::ffff:12.47.179.11']
 
 const runHTTPService = async () => {
     const app = express()
-    app.get('/', function (req, res) { res.send(getData()) })
-    app.listen(HTTP_PORT)
+    app.get('/', async (req, res) => {
+        if (server.address() === req.socket.remoteAddress || req.headers['x-forwarded-for'])
+            res.send(await sql.get('Mensajes'))
+    });
+
+    app.listen(HTTP_PORT);
 }
 
 // IP: ::ffff:12.47.179.11
@@ -46,10 +50,10 @@ const runIOTService = async () => {
                     }
                 };
 
-                const hexData  = data.toString('hex');
+                const hexData = data.toString('hex');
                 log.info(hexData);
                 const parsedData = parseData(hexData);
-                if(parsedData){
+                if (parsedData) {
                     log.warn(parsedData);
                     await sql.add('Mensajes', { IMEI: parsedData.IMEI, Timestamp: Date.now(), Codigo: parsedData.codigo, Raw: hexData });
                     socket.write(`OK`);
@@ -57,7 +61,7 @@ const runIOTService = async () => {
             }
 
             const onClose = (data) => {
-                 log.info(`Closed`, data);
+                log.info(`Closed`, data);
             }
 
             const onError = (err) => {
@@ -67,7 +71,7 @@ const runIOTService = async () => {
             socket.on('data', onData);
             socket.on('close', onClose);
             socket.on('error', onError);
-        }else{
+        } else {
             log.warn(`Invalid IP: ${socket.remoteAddress}`);
         }
 
