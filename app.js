@@ -7,11 +7,44 @@ const IOT_PORT = 4000;
 const HTTP_PORT = 3000;
 const WHITELIST = ['::ffff:12.47.179.11']
 
+const parseData = (hexData) => {
+    try {
+        const parsePayload = (payload) => ({
+            UTCE: payload.slice(0,8),
+            semilla: payload.slice(8,10),
+            tipo: payload.slice(10,12),
+            nSlaves: payload.slice(12,14),
+            data: payload.slice(14),
+        });
+
+        return {
+            MOHeader: hexData.slice(0, 2),
+            overallLenght: hexData.slice(2, 6),
+            MOHeaderIEI: hexData.slice(6, 10),
+            MOHeaderLenght: hexData.slice(10, 18),
+            IMEI: hexData.slice(20, 48),
+            sessionStatus: hexData.slice(48, 50),
+            MOMSN: hexData.slice(50, 54),
+            MTMSN: hexData.slice(50, 54),
+            timeOfSession: hexData.slice(54, 62),
+            MOPaylodIEI: hexData.slice(62, 64),
+            MOPaylodLenght: hexData.slice(64, 68),
+            payload: parsePayload(hexData.slice(68)),
+        }
+    } catch (error) {
+        log.error(error)
+    }
+};
+
 const runHTTPService = async () => {
     const app = express()
     app.get('/', async (req, res) => {
-        if (server.address() === req.socket.remoteAddress || req.headers['x-forwarded-for'])
-            res.send(await sql.get('Mensajes'))
+        if (server.address() === req.socket.remoteAddress || req.headers['x-forwarded-for']){
+            const rawMsjs = await sql.get('Mensajes');
+            const parsedMsjs = rawMsjs.map(msj => parseData(msj.raw));
+            res.send(parsedMsjs)
+        }
+            
     });
 
     app.listen(HTTP_PORT);
@@ -29,33 +62,12 @@ const runIOTService = async () => {
         if (WHITELIST.includes(socket.remoteAddress)) {
             const onData = async (data) => {
 
-                const parseData = (hexData) => {
-                    try {
-                        return {
-                            MOHeader: hexData.slice(0, 2),
-                            overallLenght: hexData.slice(2, 6),
-                            MOHeaderIEI: hexData.slice(6, 10),
-                            MOHeaderLenght: hexData.slice(10, 18),
-                            IMEI: hexData.slice(20, 48),
-                            sessionStatus: hexData.slice(48, 50),
-                            MOMSN: hexData.slice(50, 54),
-                            MTMSN: hexData.slice(50, 54),
-                            timeOfSession: hexData.slice(54, 62),
-                            MOPaylodIEI: hexData.slice(62, 64),
-                            MOPaylodLenght: hexData.slice(64, 68),
-                            payload: hexData.slice(68),
-                        }
-                    } catch (error) {
-                        log.error(error)
-                    }
-                };
-
                 const hexData = data.toString('hex');
                 log.info(hexData);
                 const parsedData = parseData(hexData);
                 if (parsedData) {
                     log.warn(parsedData);
-                    await sql.add('Mensajes', { IMEI: parsedData.IMEI, Timestamp: Date.now(), Codigo: hexData.slice(78,2), Raw: hexData });
+                    await sql.add('Mensajes', { Timestamp: Date.now(), Raw: hexData });
                     socket.write(`OK`);
                 }
             }
