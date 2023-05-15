@@ -25,7 +25,7 @@ const runIOTService = async () => {
     const server = net.createServer();
     //IOT Socket
     server.on('connection', (socket) => {
-        console.log(`Remote Address: `, socket.remotePort);
+        console.log(`Remote Address: `, socket.remoteAddress);
         if (WHITELIST.includes(socket.remoteAddress)) {
             const onData = async (data) => {
 
