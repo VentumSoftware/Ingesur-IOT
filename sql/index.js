@@ -1,6 +1,7 @@
 const knex = require('knex');
 const configuration = require('../knexfile.js');
 const connection = knex(configuration.development);
+const log = require('../logger/index.js');
 
 const EXPLICIT_CONV_CC_2_PC = { };
 const EXPLICIT_CONV_PC_2_CC = Object.entries(EXPLICIT_CONV_CC_2_PC).reduce((p, x) => ({ ...p, [x[1]]: x[0] }), {}); //inverts key/values

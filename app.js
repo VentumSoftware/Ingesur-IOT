@@ -10,26 +10,27 @@ const WHITELIST = ['::ffff:12.47.179.11']
 const parseData = (hexData) => {
     try {
         const parsePayload = (payload) => ({
-            UTCE: payload.slice(0,8),
-            semilla: payload.slice(8,10),
-            tipo: payload.slice(10,12),
-            nSlaves: payload.slice(12,14),
+            UTCE: payload.slice(0, 8),
+            semilla: payload.slice(8, 10),
+            tipo: payload.slice(10, 12),
+            nSlaves: payload.slice(12, 14),
             data: payload.slice(14),
         });
 
         return {
             MOHeader: hexData.slice(0, 2),
             overallLenght: hexData.slice(2, 6),
-            MOHeaderIEI: hexData.slice(6, 10),
-            MOHeaderLenght: hexData.slice(10, 18),
-            IMEI: hexData.slice(20, 48),
-            sessionStatus: hexData.slice(48, 50),
-            MOMSN: hexData.slice(50, 54),
-            MTMSN: hexData.slice(50, 54),
-            timeOfSession: hexData.slice(54, 62),
-            MOPaylodIEI: hexData.slice(62, 64),
-            MOPaylodLenght: hexData.slice(64, 68),
-            payload: parsePayload(hexData.slice(68)),
+            MOHeaderIEI: hexData.slice(6, 8),
+            MOHeaderLenght: hexData.slice(8, 12),
+            CDRReference: hexData.slice(12, 20),
+            IMEI: hexData.slice(20, 50),
+            sessionStatus: hexData.slice(50, 52),
+            MOMSN: hexData.slice(52, 56),
+            MTMSN: hexData.slice(56, 60),
+            timeOfSession: hexData.slice(60, 68),
+            MOPaylodIEI: hexData.slice(68, 70),
+            MOPaylodLenght: hexData.slice(70, 74),
+            payload: parsePayload(hexData.slice(74)),
         }
     } catch (error) {
         log.error(error)
@@ -38,13 +39,26 @@ const parseData = (hexData) => {
 
 const runHTTPService = async () => {
     const app = express()
-    app.get('/', async (req, res) => {
-        if (server.address() === req.socket.remoteAddress || req.headers['x-forwarded-for']){
+    app.get('/mensajes', async (req, res) => {
+        if (server.address() === req.socket.remoteAddress || req.headers['x-forwarded-for']) {
             const rawMsjs = await sql.get('Mensajes');
             const parsedMsjs = rawMsjs.map(msj => parseData(msj.raw));
-            res.send(parsedMsjs)
+            const response = {
+                areas: [
+                    {
+                        nombre: 'Test',
+                        geo: "-45.867714,-68.131386",
+                        equipos: parsedMsjs.reduce((p, x) => {
+                            p[x.IMEI] = p[x.IMEI] || { mensajes: [] };
+                            p[x.IMEI].mensajes.push(x.payload);
+                            return p;
+                        }, {})
+                    }
+                ]
+            }
+            res.send(response)
         }
-            
+
     });
 
     app.listen(HTTP_PORT);
