@@ -139,7 +139,7 @@ const runHTTPService = async () => {
             //         }
             //     ]
             // }
-            res.send(await sql.get('Mensajes'))
+            res.send((await sql.get('Mensajes').map(msj => parseData(msj.raw))))
         }
 
     });
