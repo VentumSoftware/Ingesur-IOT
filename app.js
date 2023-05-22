@@ -123,6 +123,7 @@ const parseData = (hexData) => {
 const runHTTPService = async () => {
     const app = express()
     app.get('/mensajes', async (req, res) => {
+        console.log('get mensajes')
         if (true || isThisLocalhost(req)) {
             const rawMsjs = await sql.get('Mensajes');
             const parsedMsgs = rawMsjs.map(msg => parseData(msg.raw));
