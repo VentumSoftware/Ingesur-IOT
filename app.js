@@ -8,7 +8,7 @@ const HTTP_PORT = 3000;
 const WHITELIST = ['::ffff:12.47.179.11']
 
 const hex2Dec = v => parseInt(v, 16);
-const isThisLocalhost =  (req) => {
+const isThisLocalhost = (req) => {
     var ip = req.connection.remoteAddress;
     var host = req.get('host');
     return ip === "127.0.0.1" || ip === "::ffff:127.0.0.1" || ip === "::1" || host.indexOf("localhost") !== -1;
@@ -52,7 +52,7 @@ const parseData = (hexData) => {
                     DistanciaLiquidomm0 = payload.slice(32, 36);
                     volumenDecilitros0 = payload.slice(36, 40);
                     DistanciaLiquidomm1 = payload.slice(40, 44);
-                    volumenDecilitros1 = payload.slice(44,48);
+                    volumenDecilitros1 = payload.slice(44, 48);
                     DistanciaLiquidomm2 = payload.slice(48, 52);
                     volumenDecilitros2 = payload.slice(52, 56);
                     DistanciaLiquidomm3 = payload.slice(56, 60);
@@ -124,24 +124,18 @@ const runHTTPService = async () => {
     const app = express()
     app.get('/mensajes', async (req, res) => {
         if (true || isThisLocalhost(req)) {
-            // const rawMsjs = await sql.get('Mensajes');
-            // const parsedMsjs = rawMsjs.map(msj => parseData(msj.raw));
-            // const response = {
-            //     areas: [
-            //         {
-            //             nombre: 'Test',
-            //             geo: "-45.867714,-68.131386",
-            //             equipos: parsedMsjs.reduce((p, x) => {
-            //                 p[x.IMEI] = p[x.IMEI] || { mensajes: [] };
-            //                 p[x.IMEI].mensajes.push(x.payload);
-            //                 return p;
-            //             }, {})
-            //         }
-            //     ]
-            // }
-            res.send((await sql.get('Mensajes')).map(msj => parseData(msj.raw)))
+            const rawMsjs = await sql.get('Mensajes');
+            const parsedMsgs = rawMsjs.map(msg => parseData(msg.raw));
+            const parsedMsgsByIMEI = parsedMsgs.reduce((p, msg) => {
+                p[msg.IMEI] = p[msg.IMEI] || [];
+                p[msg.IMEI].push(msg);
+                return p;
+            }, {});
+            const IMEI2Groups = []; // TODO: query from DDBB
+            const IMEIsWithNoGroup = Object.keys(parsedMsgsByIMEI).filter(IMEI => !IMEI2Groups.some(g => g.IMEIs.includes(IMEI)));
+            IMEI2Groups.push({ nombre: 'Sin Grupo', geo: null, IMEIs: IMEIsWithNoGroup });
+            res.send(IMEI2Groups.reduce((p, g) => [...p, {...g, equipos: g.IMEIs.map(IMEI => parsedMsgsByIMEI[IMEI])}], []));
         }
-
     });
 
     app.listen(HTTP_PORT);
