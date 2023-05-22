@@ -123,7 +123,6 @@ const parseData = (hexData) => {
 const runHTTPService = async () => {
     const app = express()
     app.get('/mensajes', async (req, res) => {
-        console.log('get mensajes')
         if (true || isThisLocalhost(req)) {
             const rawMsjs = await sql.get('Mensajes');
             const parsedMsgs = rawMsjs.map(msg => parseData(msg.raw));
@@ -134,8 +133,8 @@ const runHTTPService = async () => {
             }, {});
             const IMEI2Groups = []; // TODO: query from DDBB
             const IMEIsWithNoGroup = Object.keys(parsedMsgsByIMEI).filter(IMEI => !IMEI2Groups.some(g => g.IMEIs.includes(IMEI)));
-            IMEI2Groups.push({ nombre: 'Sin Grupo', geo: null, IMEIs: IMEIsWithNoGroup });
-            res.send(IMEI2Groups.reduce((p, g) => [...p, {...g, equipos: g.IMEIs.map(IMEI => parsedMsgsByIMEI[IMEI])}], []));
+            IMEI2Groups.push({ nombre: 'Sin Grupo', geo: "-45.867714,-68.131386", IMEIs: IMEIsWithNoGroup });
+            res.send(IMEI2Groups.reduce((p, g) => [...p, { ...g, equipos: g.IMEIs.map(IMEI => ({ IMEI, mensajes: parsedMsgsByIMEI[IMEI] })) }], []).map(g => delete g.IMEIs && g));
         }
     });
 
@@ -144,7 +143,6 @@ const runHTTPService = async () => {
 
 const runIOTService = async () => {
     const server = net.createServer();
-    //IOT Socket
     server.on('connection', (socket) => {
         console.log(`Remote Address: `, socket.remoteAddress);
         if (WHITELIST.includes(socket.remoteAddress)) {
@@ -159,13 +157,9 @@ const runIOTService = async () => {
                 }
             }
 
-            const onClose = (data) => {
-                log.info(`Closed`, data);
-            }
+            const onClose = (data) => { log.info(`Closed`, data); }
 
-            const onError = (err) => {
-                log.error(`Error: ${err.message}`)
-            }
+            const onError = (err) => { log.error(`Error: ${err.message}`) }
 
             socket.on('data', onData);
             socket.on('close', onClose);
