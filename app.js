@@ -139,7 +139,7 @@ const runHTTPService = async () => {
         }
     });
 
-    app.listen(HTTP_PORT);
+    app.listen(HTTP_PORT, () => console.log(`IOT HTTP listening on port ${HTTP_PORT}!`));
 }
 
 const runIOTService = async () => {
