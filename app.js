@@ -102,9 +102,9 @@ const parseData = (hexData) => {
 
         return {
             MOHeader: hexData.slice(0, 2),
-            overallLenght: hexData.slice(2, 6),
+            overallLength: hexData.slice(2, 6),
             MOHeaderIEI: hexData.slice(6, 8),
-            MOHeaderLenght: hexData.slice(8, 12),
+            MOHeaderLength: hexData.slice(8, 12),
             CDRReference: hexData.slice(12, 20),
             IMEI: hexData.slice(20, 50),
             sessionStatus: hexData.slice(50, 52),
@@ -112,7 +112,7 @@ const parseData = (hexData) => {
             MTMSN: hexData.slice(56, 60),
             timeOfSession: hexData.slice(60, 68),
             MOPaylodIEI: hexData.slice(68, 70),
-            MOPaylodLenght: hexData.slice(70, 74),
+            MOPaylodLength: hexData.slice(70, 74),
             payload: parsePayload(hexData.slice(74)),
         }
     } catch (error) {
@@ -125,7 +125,7 @@ const runHTTPService = async () => {
     app.get('/mensajes', async (req, res) => {
         if (true || isThisLocalhost(req)) {
             const rawMsjs = await sql.get('Mensajes');
-            const parsedMsgs = rawMsjs.map(msg => parseData(msg.raw));
+            const parsedMsgs = rawMsjs.map(msg => ({raw: msg.raw, parsed: parseData(msg.raw)}));
             const parsedMsgsByIMEI = parsedMsgs.reduce((p, msg) => {
                 p[msg.IMEI] = p[msg.IMEI] || [];
                 p[msg.IMEI].push(msg);
