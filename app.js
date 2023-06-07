@@ -125,7 +125,7 @@ const runHTTPService = async () => {
     app.get('/mensajes', async (req, res) => {
         if (true || isThisLocalhost(req)) {
             const rawMsjs = await sql.get('Mensajes');
-            const parsedMsgs = rawMsjs.map(msg => ({ ts: msg.timestamp, raw: msg.raw, parsed: parseData(msg.raw) }));
+            const parsedMsgs = rawMsjs.map(msg => ({IMEI: parseData(msg.raw).IMEI, ts: msg.timestamp, raw: msg.raw, parsed: parseData(msg.raw) }));
             const parsedMsgsByIMEI = parsedMsgs.reduce((p, msg) => {
                 p[msg.IMEI] = p[msg.IMEI] || [];
                 p[msg.IMEI].push(msg);
