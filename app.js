@@ -125,7 +125,7 @@ const runHTTPService = async () => {
     app.get('/mensajes', async (req, res) => {
         if (true || isThisLocalhost(req)) {
             const rawMsjs = await sql.get('Mensajes');
-            const parsedMsgs = rawMsjs.map(msg => ({IMEI: parseData(msg.raw).IMEI, ts: msg.timestamp, raw: msg.raw, parsed: parseData(msg.raw) }));
+            const parsedMsgs = rawMsjs.map(msg => ({ IMEI: parseData(msg.raw).IMEI, ts: msg.timestamp, raw: msg.raw, parsed: parseData(msg.raw) }));
             const parsedMsgsByIMEI = parsedMsgs.reduce((p, msg) => {
                 p[msg.IMEI] = p[msg.IMEI] || [];
                 p[msg.IMEI].push(msg);
@@ -136,7 +136,12 @@ const runHTTPService = async () => {
             IMEI2Groups.push({ nombre: 'Sin Grupo', geo: "-45.867714,-68.131386", IMEIs: IMEIsWithNoGroup });
             res.send(
                 IMEI2Groups
-                    .reduce((p, g) => [...p, { ...g, equipos: g.IMEIs.map(IMEI => ({ IMEI, mensajes: parsedMsgsByIMEI[IMEI] })) }], [])
+                    .reduce((p, g) => [...p, {
+                        ...g, equipos: g.IMEIs.map(IMEI => ({
+                            IMEI, mensajes: parsedMsgsByIMEI[IMEI]
+                                .map(x => ({ parsed: x.parsed, raw: x.raw, ts: x.ts }))
+                        }))
+                    }], [])
                     .map(g => delete g.IMEIs && g)
             );
         }
