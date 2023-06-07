@@ -125,7 +125,7 @@ const runHTTPService = async () => {
     app.get('/mensajes', async (req, res) => {
         if (true || isThisLocalhost(req)) {
             const rawMsjs = await sql.get('Mensajes');
-            const parsedMsgs = rawMsjs.map(msg => ({raw: msg.raw, parsed: parseData(msg.raw)}));
+            const parsedMsgs = rawMsjs.map(msg => ({ ...msg.raw, parsed: parseData(msg.raw) }));
             const parsedMsgsByIMEI = parsedMsgs.reduce((p, msg) => {
                 p[msg.IMEI] = p[msg.IMEI] || [];
                 p[msg.IMEI].push(msg);
@@ -134,7 +134,11 @@ const runHTTPService = async () => {
             const IMEI2Groups = []; // TODO: query from DDBB
             const IMEIsWithNoGroup = Object.keys(parsedMsgsByIMEI).filter(IMEI => !IMEI2Groups.some(g => g.IMEIs.includes(IMEI)));
             IMEI2Groups.push({ nombre: 'Sin Grupo', geo: "-45.867714,-68.131386", IMEIs: IMEIsWithNoGroup });
-            res.send(IMEI2Groups.reduce((p, g) => [...p, { ...g, equipos: g.IMEIs.map(IMEI => ({ IMEI, mensajes: parsedMsgsByIMEI[IMEI] })) }], []).map(g => delete g.IMEIs && g));
+            res.send(
+                IMEI2Groups
+                    .reduce((p, g) => [...p, { ...g, equipos: g.IMEIs.map(IMEI => ({ IMEI, mensajes: parsedMsgsByIMEI[IMEI] })) }], [])
+                    .map(g => delete g.IMEIs && g)
+            );
         }
     });
 
