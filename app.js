@@ -63,16 +63,16 @@ const parseData = (hexData) => {
                     res.volumenDecilitros5 = payload.slice(76, 80);
                     res.distanciaLiquidomm6 = payload.slice(80, 84);
                     res.volumenDecilitros6 = payload.slice(84, 88);
-                    res.distanciaLiquidomm7 = payload.slice(92, 96);
-                    res.volumenDecilitros7 = payload.slice(96, 100);
-                    res.distanciaLiquidomm8 = payload.slice(100, 104);
-                    res.volumenDecilitros8 = payload.slice(104, 108);
-                    res.distanciaLiquidomm9 = payload.slice(108, 112);
-                    res.volumenDecilitros9 = payload.slice(112, 116);
-                    res.distanciaLiquidomm10 = payload.slice(116, 120);
-                    res.volumenDecilitros10 = payload.slice(120, 124);
-                    res.distanciaLiquidomm11 = payload.slice(124, 128);
-                    res.volumenDecilitros11 = payload.slice(128, 132);
+                    res.distanciaLiquidomm7 = payload.slice(88, 92);
+                    res.volumenDecilitros7 = payload.slice(92, 96);
+                    res.distanciaLiquidomm8 = payload.slice(96, 98);
+                    res.volumenDecilitros8 = payload.slice(98, 102);
+                    res.distanciaLiquidomm9 = payload.slice(102, 106);
+                    res.volumenDecilitros9 = payload.slice(106, 110);
+                    res.distanciaLiquidomm10 = payload.slice(110, 114);
+                    res.volumenDecilitros10 = payload.slice(114, 118);
+                    res.distanciaLiquidomm11 = payload.slice(118, 122);
+                    res.volumenDecilitros11 = payload.slice(122, 126);
                     break;
                 case 80:
                     res.UTCE = payload.slice(0, 8);
