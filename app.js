@@ -258,7 +258,7 @@ const parser = (rawMsjs) => {
                 payload: parsePayload(hexData.slice(74)),
             }
         } catch (error) {
-            log.error(error)
+            console.error(error)
         }
     }
 
