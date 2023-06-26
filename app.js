@@ -14,7 +14,7 @@ const isThisLocalhost = (req) => {
 };
 
 const parser = (rawMsjs) => {
-    const parseMsg2Hex = (hexData) => {
+    const parseMsg = (hexData) => {
         const hex2Dec = v => parseInt(v, 16);
         try {
             const parsePayload = (payload) => {
@@ -263,8 +263,7 @@ const parser = (rawMsjs) => {
     }
 
     const parsedMsgs = rawMsjs.map(msg => {
-        const parsedMsg2Hex = parseMsg2Hex(msg.raw);
-        const parsed = parseHex2Humans(parsedMsg2Hex);
+        const parsed = parseMsg(msg.raw);
         return { IMEI: parsed.IMEI, ts: msg.timestamp, raw: msg.raw, parsed }
     });
 
