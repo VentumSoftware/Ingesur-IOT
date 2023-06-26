@@ -122,6 +122,7 @@ const parser = (rawMsjs) => {
     };
 
     const parsedMsgs = rawMsjs.map(msg => ({ IMEI: parseMsg(msg.raw).IMEI, ts: msg.timestamp, raw: msg.raw, parsed: parseMsg(msg.raw) }));
+    
     const parsedMsgsByIMEI = parsedMsgs.reduce((p, msg) => {
         p[msg.IMEI] = p[msg.IMEI] || [];
         p[msg.IMEI].push(msg);
@@ -130,15 +131,15 @@ const parser = (rawMsjs) => {
     const IMEI2Groups = []; // TODO: query from DDBB
     const IMEIsWithNoGroup = Object.keys(parsedMsgsByIMEI).filter(IMEI => !IMEI2Groups.some(g => g.IMEIs.includes(IMEI)));
     IMEI2Groups.push({ nombre: 'Sin Grupo', IMEIs: IMEIsWithNoGroup });
-
+    return IMEI2Groups;
     return IMEI2Groups
         .reduce((p, g) => [...p, {
             ...g,
             equipos: g.IMEIs.map(IMEI => ({
                 IMEI,
                 equipos: parsedMsgsByIMEI[IMEI].reduce((p, x) => {
-                    p[x.nSlaves || 'general'] ??= { nSlave: x.nSlaves, mensajes: [] };
-                    p[x.nSlaves].mensajes.push({ parsed: x.parsed, raw: x.raw, ts: x.ts });
+                    p[x.payload.nSlaves || 'general'] ??= { nSlave: x.payload.nSlaves, mensajes: [] };
+                    p[x.payload.nSlaves].mensajes.push({ parsed: x.parsed, raw: x.raw, ts: x.ts });
                     return p;
                 }, []),
             }))
