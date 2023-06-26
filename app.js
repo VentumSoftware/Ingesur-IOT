@@ -143,7 +143,7 @@ const parser = (rawMsjs) => {
                     p[x.parsed.payload.nSlaves || 'general'] ??= { nSlave: x.parsed.payload.nSlaves, mensajes: [] };
                     p[x.parsed.payload.nSlaves || 'general'].mensajes.push({ parsed: x.parsed, raw: x.raw, ts: x.ts });
                     return p;
-                }, []),
+                }, {}),
             }))
         }], [])
         .map(g => delete g.IMEIs && g);
