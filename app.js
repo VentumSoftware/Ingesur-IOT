@@ -138,6 +138,7 @@ const parser = (rawMsjs) => {
             equipos: g.IMEIs.map(IMEI => ({
                 IMEI,
                 equipos: parsedMsgsByIMEI[IMEI].reduce((p, x) => {
+                    console.log(x)
                     p[x.nSlaves || 'general'] ??= { nSlave: x.nSlaves, mensajes: [] };
                     p[x.nSlaves].mensajes.push({ parsed: x.parsed, raw: x.raw, ts: x.ts });
                     return p;
