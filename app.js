@@ -160,7 +160,7 @@ const parser = (rawMsjs) => {
         try {
             const parsePayload = (payload) => {
                 const res = { tipo: hex2Dec(payload.slice(10, 12)) };
-                switch (hex2Dec(res.tipo)) {
+                switch (tipo) {
                     case 14:
                         res.UTCE = hex2Dec(payload.slice(0, 8)) * 1000;
                         res.semilla = hex2Dec(payload.slice(8, 10));
@@ -224,14 +224,14 @@ const parser = (rawMsjs) => {
                         res.opcional = hex2Dec(payload.slice(18));
                         break;
                     case 90:
-                        res.UTCE =hex2Dec(payload.slice(0, 8)) * 1000;
+                        res.UTCE = hex2Dec(payload.slice(0, 8)) * 1000;
                         res.semilla = hex2Dec(payload.slice(8, 10));
                         res.nSlaves = hex2Dec(payload.slice(12, 14));
                         res.error = hex2Dec(payload.slice(14, 16));
                         res.onOff = hex2Dec(payload.slice(16, 18));
                         break;
                     case 92:
-                        res.UTCE =hex2Dec(payload.slice(0, 8)) * 1000;
+                        res.UTCE = hex2Dec(payload.slice(0, 8)) * 1000;
                         res.semilla = hex2Dec(payload.slice(8, 10));
                         res.nSlaves = hex2Dec(payload.slice(12, 14));
                         res.payload = payload.slice(14);
