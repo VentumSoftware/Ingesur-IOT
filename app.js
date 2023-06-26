@@ -160,7 +160,7 @@ const parser = (rawMsjs) => {
         try {
             const parsePayload = (payload) => {
                 const res = { tipo: hex2Dec(payload.slice(10, 12)) };
-                switch (tipo) {
+                switch (res.tipo) {
                     case 14:
                         res.UTCE = hex2Dec(payload.slice(0, 8)) * 1000;
                         res.semilla = hex2Dec(payload.slice(8, 10));
