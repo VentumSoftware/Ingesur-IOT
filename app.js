@@ -139,8 +139,8 @@ const parser = (rawMsjs) => {
                 IMEI,
                 equipos: parsedMsgsByIMEI[IMEI].reduce((p, x) => {
                     console.log(x)
-                    p[x.nSlaves || 'general'] ??= { nSlave: x.nSlaves, mensajes: [] };
-                    p[x.nSlaves].mensajes.push({ parsed: x.parsed, raw: x.raw, ts: x.ts });
+                    p[x.parsed.payload.nSlaves || 'general'] ??= { nSlave: x.parsed.payload.nSlaves, mensajes: [] };
+                    p[x.parsed.payload.nSlaves || 'general'].mensajes.push({ parsed: x.parsed, raw: x.raw, ts: x.ts });
                     return p;
                 }, []),
             }))
