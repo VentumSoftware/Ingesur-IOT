@@ -121,7 +121,7 @@ const parser = (rawMsjs) => {
         }
     };
 
-    const parsedMsgs = rawMsjs.map(msg => ({ IMEI: parseData(msg.raw).IMEI, ts: msg.timestamp, raw: msg.raw, parsed: parseMsg(msg.raw) }));
+    const parsedMsgs = rawMsjs.map(msg => ({ IMEI: parseMsg(msg.raw).IMEI, ts: msg.timestamp, raw: msg.raw, parsed: parseMsg(msg.raw) }));
     const parsedMsgsByIMEI = parsedMsgs.reduce((p, msg) => {
         p[msg.IMEI] = p[msg.IMEI] || [];
         p[msg.IMEI].push(msg);
