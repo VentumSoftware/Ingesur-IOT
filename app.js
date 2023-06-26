@@ -131,7 +131,7 @@ const parser = (rawMsjs) => {
     const IMEI2Groups = []; // TODO: query from DDBB
     const IMEIsWithNoGroup = Object.keys(parsedMsgsByIMEI).filter(IMEI => !IMEI2Groups.some(g => g.IMEIs.includes(IMEI)));
     IMEI2Groups.push({ nombre: 'Sin Grupo', IMEIs: IMEIsWithNoGroup });
-    return IMEI2Groups;
+
     return IMEI2Groups
         .reduce((p, g) => [...p, {
             ...g,
