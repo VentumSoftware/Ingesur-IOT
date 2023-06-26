@@ -132,13 +132,14 @@ const parser = (rawMsjs) => {
     const IMEIsWithNoGroup = Object.keys(parsedMsgsByIMEI).filter(IMEI => !IMEI2Groups.some(g => g.IMEIs.includes(IMEI)));
     IMEI2Groups.push({ nombre: 'Sin Grupo', IMEIs: IMEIsWithNoGroup });
     console.log(parsedMsgsByIMEI);
-    
+
     return IMEI2Groups
         .reduce((p, g) => [...p, {
             ...g,
             equipos: g.IMEIs.map(IMEI => ({
                 IMEI,
                 equipos: parsedMsgsByIMEI[IMEI].reduce((p, x) => {
+                    console.log(x.parsed.payload.nSlaves || 'general')
                     p[x.parsed.payload.nSlaves || 'general'] ??= { nSlave: x.parsed.payload.nSlaves, mensajes: [] };
                     p[x.parsed.payload.nSlaves || 'general'].mensajes.push({ parsed: x.parsed, raw: x.raw, ts: x.ts });
                     return p;
