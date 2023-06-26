@@ -171,30 +171,34 @@ const runHTTPService = async () => {
 };
 
 const runIOTService = async () => {
-    const fortyDaysInMilli = 40 * 24 * 60 * 60 * 1000;
     const server = net.createServer();
     cache.data = (await sql.get('Mensajes')).sort((a, b) => b.ts - a.ts).slice(0, 10000);
     server.on('connection', (socket) => {
-        console.log(`Remote Address: `, socket.remoteAddress);
+
         if (WHITELIST.includes(socket.remoteAddress)) {
+            console.log(`
+            Remote IP: ${socket.remoteAddress}
+            Date: ${new Date().toDateString()}
+            `);
+
             const onData = async (data) => {
                 const hexData = data.toString('hex');
-                log.info(hexData);
+                log.info(`onData: ${hexData}`);
                 cache.data.unshift({ ts: Date.now(), raw: hexData });
                 if (cache.data.length > 10000) cache.data.pop();
                 await sql.add('Mensajes', { Timestamp: Date.now(), Raw: hexData });
                 socket.write(`OK`);
+                log.info(`OK: ${hexData}`);
             }
 
             const onClose = (data) => { log.info(`Closed`, data); }
-
             const onError = (err) => { log.error(`Error: ${err.message}`) }
 
             socket.on('data', onData);
             socket.on('close', onClose);
             socket.on('error', onError);
         } else {
-            log.warn(`Invalid IP: ${socket.remoteAddress}`);
+            log.warn(`Invalid IP: ${socket.remoteAddress} - Date: ${new Date().toDateString()}`);
         }
 
     })
