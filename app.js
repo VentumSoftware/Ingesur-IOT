@@ -135,7 +135,7 @@ const parser = (rawMsjs) => {
     return IMEI2Groups
         .reduce((p, g) => [...p, {
             ...g,
-            equipos: g.IMEIs.map(IMEI => ({
+            IMEIs: g.IMEIs.map(IMEI => ({
                 IMEI,
                 equipos: parsedMsgsByIMEI[IMEI].reduce((p, x) => {
                     p[x.parsed.payload.nSlaves || 'general'] ??= { nSlave: x.parsed.payload.nSlaves, mensajes: [] };
@@ -144,7 +144,7 @@ const parser = (rawMsjs) => {
                 }, {}),
             }))
         }], [])
-        .map(g => delete g.IMEIs && g);
+        .map(g => g);
 }
 const cache = { parser: parser.toString(), data: [] };
 
