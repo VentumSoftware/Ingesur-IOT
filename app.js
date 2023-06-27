@@ -175,7 +175,7 @@ const runIOTService = async () => {
     const server = net.createServer();
     cache.messages = await sql.get('Mensajes');
     cache.count = cache.messages.length;
-    cache.messages = cache.messages.map((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 10000);
+    cache.messages = cache.messages.map(x => ({ ...x, timestamp: parseInt(x.timestamp) })).sort((a, b) => b.timestamp - a.timestamp).slice(0, 10000);
     server.on('connection', (socket) => {
 
         if (WHITELIST.includes(socket.remoteAddress)) {
