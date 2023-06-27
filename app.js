@@ -175,7 +175,7 @@ const runIOTService = async () => {
     const server = net.createServer();
     cache.messages = await sql.get('Mensajes');
     cache.count = cache.messages.length;
-    cache.messages = cache.messages.sort((a, b) => b.ts - a.ts).slice(0, 10000);
+    cache.messages = cache.messages.map((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 10000);
     server.on('connection', (socket) => {
 
         if (WHITELIST.includes(socket.remoteAddress)) {
@@ -188,7 +188,7 @@ const runIOTService = async () => {
                 const hexData = data.toString('hex');
                 log.info(`onData: ${hexData}`);
                 cache.count++;
-                cache.messages.unshift({ ts: Date.now(), raw: hexData });
+                cache.messages.unshift({ timestamp: Date.now(), raw: hexData });
                 if (cache.messages.length > 10000) cache.messages.pop();
                 await sql.add('Mensajes', { Timestamp: Date.now(), Raw: hexData });
                 socket.write(`OK`);
