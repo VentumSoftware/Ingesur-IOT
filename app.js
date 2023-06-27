@@ -156,8 +156,9 @@ const parser = (rawMsjs) => {
             }))
         }], [])
         .map(g => g);
-}
-const cache = { parser: parser.toString(), data: [] };
+};
+
+const cache = { messages: [], IMEI2Groups: [], IMEIsConfig: [], slavesConfig: [], count: 0 };
 
 const runHTTPService = async () => {
     const app = express()
@@ -172,7 +173,9 @@ const runHTTPService = async () => {
 
 const runIOTService = async () => {
     const server = net.createServer();
-    cache.data = (await sql.get('Mensajes')).sort((a, b) => b.ts - a.ts).slice(0, 10000);
+    cache.messages = await sql.get('Mensajes');
+    cache.count = cache.messages.length;
+    cache.messages = cache.messages.sort((a, b) => b.ts - a.ts).slice(0, 10000);
     server.on('connection', (socket) => {
 
         if (WHITELIST.includes(socket.remoteAddress)) {
@@ -184,8 +187,9 @@ const runIOTService = async () => {
             const onData = async (data) => {
                 const hexData = data.toString('hex');
                 log.info(`onData: ${hexData}`);
-                cache.data.unshift({ ts: Date.now(), raw: hexData });
-                if (cache.data.length > 10000) cache.data.pop();
+                cache.count++;
+                cache.messages.unshift({ ts: Date.now(), raw: hexData });
+                if (cache.messages.length > 10000) cache.messages.pop();
                 await sql.add('Mensajes', { Timestamp: Date.now(), Raw: hexData });
                 socket.write(`OK`);
                 log.info(`OK: ${hexData}`);
