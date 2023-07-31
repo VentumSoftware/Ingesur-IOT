@@ -17,11 +17,12 @@ const isThisLocalhost = (req) => {
 const fromASCII = str => str?.match(/.{1,2}/g)?.map(pair => String.fromCharCode(parseInt(pair, 16)))?.join("");
 const getIMEI = hexData => fromASCII(hexData.slice(20, 50));
 const getSlaveN = hexData => hex2Dec(hexData.slice(86, 88));
+const hex2Dec = v => parseInt(v, 16);
 
 const parser = rawMsjs => {
 
     const parseMsg = (hexData) => {
-        const hex2Dec = v => parseInt(v, 16);
+        
         const hex2DecInv = v => {
             let hex = v.substr(2, 2) + v.substr(0, 2)
             return hex2Dec(hex);
