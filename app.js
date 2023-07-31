@@ -2,18 +2,23 @@ const net = require('net');
 const express = require('express');
 const sql = require('./sql/index.js');
 const log = require('./logger/index.js');
+const fs = require('fs');
 
 const IOT_PORT = 4000;
 const HTTP_PORT = 3000;
 const WHITELIST = ['::ffff:12.47.179.11'];
-
+const CACHE_SIZE = 100000;
 const isThisLocalhost = (req) => {
     var ip = req.connection.remoteAddress;
     var host = req.get('host');
     return ip === "127.0.0.1" || ip === "::ffff:127.0.0.1" || ip === "::1" || host.indexOf("localhost") !== -1;
 };
 
-const parser = (rawMsjs) => {
+const fromASCII = str => str?.match(/.{1,2}/g)?.map(pair => String.fromCharCode(parseInt(pair, 16)))?.join("");
+const getIMEI = hexData => fromASCII(hexData.slice(20, 50));
+const getSlaveN = hexData => hex2Dec(hexData.slice(86, 88));
+
+const parser = rawMsjs => {
 
     const parseMsg = (hexData) => {
         const hex2Dec = v => parseInt(v, 16);
@@ -22,7 +27,6 @@ const parser = (rawMsjs) => {
             return hex2Dec(hex);
         }
         const dec2Hex = v => v?.toString(16) || '0000';
-        const fromASCII = str => str?.match(/.{1,2}/g)?.map(pair => String.fromCharCode(parseInt(pair, 16)))?.join("");
 
         try {
             const parsePayload = (payload) => {
@@ -158,38 +162,61 @@ const parser = (rawMsjs) => {
         .map(g => g);
 };
 
-const cache = { messages: [], IMEI2Groups: [], IMEIsConfig: [], slavesConfig: [], count: 0 };
+const cache = { messages: [], config: JSON.parse(fs.readFileSync('./iotConfig.json')) };
 
 const runHTTPService = async () => {
-    const app = express()
-    app.get('/mensajes', async (req, res) => {
-        if (true || isThisLocalhost(req)) {
-            res.send(cache);
-        }
-    });
+    const app = express();
+
+    app.get('/mensajes', async (req, res) => isThisLocalhost(req) || true ? res.send(cache.messages) : res.status(403).end());
+
+    app.get('/mensajes/:IMEI', async (req, res) => isThisLocalhost(req) || true ? res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI)) : res.status(403).end());
+
+    app.get('/config', async (req, res) => isThisLocalhost(req) || true ? res.send(cache.config) : res.status(403).end());
+
+    app.patch('/config', async (req, res) => isThisLocalhost(req) || true ?
+        fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
+            if (err) {
+                console.error(err);
+                res.status(500).end();
+            } else {
+                cache.config = req.body;
+                res.send('Ok');
+            }
+        }) :
+        res.status(403).end()
+    );
 
     app.listen(HTTP_PORT, () => console.log(`IOT HTTP listening on port ${HTTP_PORT}!`));
 };
 
 const runIOTService = async () => {
+
+    const updateConfig = ({ ts, raw, IMEI }) => {
+        cache.config.IMEIsConfig[IMEI] ??= { IMEI, alias: null, grupos: [], latitud: null, longitud: null, esclavos: [] };
+        const IMEIConfig = cache.config.IMEIsConfig[IMEI];
+        const esclavoN = getSlaveN(raw);
+        IMEIConfig[esclavoN] ??= { esclavoN, alias: null, msgsN: 0, ultimoMsgTs: ts, grafico: {} };
+        IMEIConfig[esclavoN].msgsN++;
+        IMEIConfig[esclavoN].ultimoMsgTs > ts && (IMEIConfig[esclavoN].ultimoMsgTs = ts);
+    };
+
     const server = net.createServer();
-    cache.messages = await sql.get('Mensajes');
-    cache.count = cache.messages.length;
-    cache.messages = cache.messages.map(x => ({ ...x, timestamp: parseInt(x.timestamp) })).sort((a, b) => b.timestamp - a.timestamp).slice(0, 10000);
+    cache.config = JSON.parse(fs.readFileSync('./iotConfig.json'));
+    cache.messages = (await sql.get('Mensajes')).map(x => ({ ...x, ts: parseInt(x.timestamp) })).sort((a, b) => b.ts - a.ts).slice(0, CACHE_SIZE);
+    cache.messages.map(updateConfig);
+
     server.on('connection', (socket) => {
 
         if (WHITELIST.includes(socket.remoteAddress)) {
-            console.log(`
-            Remote IP: ${socket.remoteAddress}
-            Date: ${new Date().toDateString()}
-            `);
+            console.log(` Remote IP: ${socket.remoteAddress} - Date: ${new Date().toDateString()} `);
 
             const onData = async (data) => {
                 const hexData = data.toString('hex');
                 log.info(`onData: ${hexData}`);
+                updateConfig({ ts: Date.now(), raw: hexData, IMEI: getIMEI(hexData) });
                 cache.count++;
-                cache.messages.unshift({ timestamp: Date.now(), raw: hexData });
-                if (cache.messages.length > 10000) cache.messages.pop();
+                cache.messages.unshift({ timestamp: Date.now(), raw: hexData, IMEI: getIMEI(hexData) });
+                if (cache.messages.length > CACHE_SIZE) cache.messages.pop();
                 await sql.add('Mensajes', { Timestamp: Date.now(), Raw: hexData });
                 socket.write(`OK`);
                 log.info(`OK: ${hexData}`);
