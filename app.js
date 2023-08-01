@@ -201,7 +201,7 @@ const runIOTService = async () => {
 
     const updateCache = ({ ts, raw, IMEI, esclavoN }) => {
         const config = (cache.config[IMEI] ??= { IMEI, alias: null, grupos: [], latitud: null, longitud: null, esclavos: [] });
-        const status = (cache.status[IMEI] ??= { mensajesN: 0, ultimoMsgTs: 0, esclavos: [] });
+        const status = (cache.status[IMEI] ??= {});
 
         config[esclavoN] ??= { esclavoN, alias: null, grafico: {} };
         status[esclavoN] ??= { msgsN: 0, ultimoMsgTs: ts };
