@@ -204,7 +204,7 @@ const runIOTService = async () => {
         const status = (cache.status[IMEI] ??= { mensajesN: 0, ultimoMsgTs: 0, esclavos: [] });
 
         config[esclavoN] ??= { esclavoN, alias: null, grafico: {} };
-        status[esclavoN] ??= { msgsN, ultimoMsgTs: ts };
+        status[esclavoN] ??= { msgsN: 0, ultimoMsgTs: ts };
 
         status[esclavoN].msgsN++;
         status[esclavoN].ultimoMsgTs > ts && (config[esclavoN].ultimoMsgTs = ts);
