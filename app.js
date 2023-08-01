@@ -203,11 +203,11 @@ const runIOTService = async () => {
         const config = (cache.config[IMEI] ??= { IMEI, alias: null, grupos: [], latitud: null, longitud: null, esclavos: [] });
         const status = (cache.status[IMEI] ??= {});
 
-        config[esclavoN] ??= { esclavoN, alias: null, grafico: {} };
-        status[esclavoN] ??= { msgsN: 0, ultimoMsgTs: ts };
+        config.esclavos[esclavoN] ??= { esclavoN, alias: null, grafico: {} };
+        status.esclavos[esclavoN] ??= { msgsN: 0, ultimoMsgTs: ts };
 
-        status[esclavoN].msgsN++;
-        status[esclavoN].ultimoMsgTs > ts && (config[esclavoN].ultimoMsgTs = ts);
+        status.esclavos[esclavoN].msgsN++;
+        status.esclavos[esclavoN].ultimoMsgTs > ts && (status.esclavos[esclavoN].ultimoMsgTs = ts);
     };
 
 
