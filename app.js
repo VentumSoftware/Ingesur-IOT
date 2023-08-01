@@ -218,7 +218,6 @@ const runIOTService = async () => {
         .slice(0, CACHE_SIZE);
 
     cache.messages.forEach(updateCache);
-    console.log(cache.config)
     server.on('connection', (socket) => {
 
         if (WHITELIST.includes(socket.remoteAddress)) {
