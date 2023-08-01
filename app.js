@@ -182,7 +182,7 @@ const runHTTPService = async () => {
     app.get('/config', async (req, res) => isThisLocalhost(req) ? res.send(cache.config) : res.status(403).end());
 
     app.patch('/config', async (req, res) => isThisLocalhost(req) ?
-        fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
+        fs.writeFile('./iotConfig.json', JSON.stringify({ ...cache.config, ...req.body }), (err) => {
             if (err) {
                 console.error(err);
                 res.status(500).end();
@@ -218,7 +218,7 @@ const runIOTService = async () => {
         .slice(0, CACHE_SIZE);
 
     cache.messages.forEach(updateCache);
-
+    console.log(cache.config)
     server.on('connection', (socket) => {
 
         if (WHITELIST.includes(socket.remoteAddress)) {
