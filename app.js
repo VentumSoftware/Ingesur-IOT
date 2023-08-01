@@ -1,4 +1,4 @@
-const net = require('net');
+const server = require('net').createServer();
 const express = require('express');
 const sql = require('./sql/index.js');
 const log = require('./logger/index.js');
@@ -9,6 +9,7 @@ const HTTP_PORT = 3000;
 const WHITELIST = ['::ffff:12.47.179.11'];
 const CACHE_SIZE = 100000;
 const isThisLocalhost = (req) => {
+    return true;
     var ip = req.connection.remoteAddress;
     var host = req.get('host');
     return ip === "127.0.0.1" || ip === "::ffff:127.0.0.1" || ip === "::1" || host.indexOf("localhost") !== -1;
@@ -16,13 +17,13 @@ const isThisLocalhost = (req) => {
 
 const fromASCII = str => str?.match(/.{1,2}/g)?.map(pair => String.fromCharCode(parseInt(pair, 16)))?.join("");
 const getIMEI = hexData => fromASCII(hexData.slice(20, 50));
-const getSlaveN = hexData => hex2Dec(hexData.slice(86, 88));
+const getSlaveN = hexData => hex2Dec(hexData.slice(86, 88)) || 0;
 const hex2Dec = v => parseInt(v, 16);
 
 const parser = rawMsjs => {
 
     const parseMsg = (hexData) => {
-        
+
         const hex2DecInv = v => {
             let hex = v.substr(2, 2) + v.substr(0, 2)
             return hex2Dec(hex);
@@ -163,18 +164,24 @@ const parser = rawMsjs => {
         .map(g => g);
 };
 
-const cache = { messages: [], config: JSON.parse(fs.readFileSync('./iotConfig.json')) };
+const cache = { messages: [], config: JSON.parse(fs.readFileSync('./iotConfig.json')), status: {} };
 
 const runHTTPService = async () => {
     const app = express();
 
-    app.get('/mensajes', async (req, res) => isThisLocalhost(req) || true ? res.send(cache.messages) : res.status(403).end());
+    app.get('/mensajes', async (req, res) => isThisLocalhost(req) ? res.send(cache.messages) : res.status(403).end());
 
-    app.get('/mensajes/:IMEI', async (req, res) => isThisLocalhost(req) || true ? res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI)) : res.status(403).end());
+    app.get('/mensajes/:IMEI/:esclavo', async (req, res) => isThisLocalhost(req) ?
+        res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI && x.esclavoN === parseInt(req.params.esclavo))) : res.status(403).end());
 
-    app.get('/config', async (req, res) => isThisLocalhost(req) || true ? res.send(cache.config) : res.status(403).end());
+    app.get('/mensajes/:IMEI', async (req, res) => isThisLocalhost(req) ?
+        res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI)) : res.status(403).end());
 
-    app.patch('/config', async (req, res) => isThisLocalhost(req) || true ?
+    app.get('/status', async (req, res) => isThisLocalhost(req) ? res.send(cache.status) : res.status(403).end());
+
+    app.get('/config', async (req, res) => isThisLocalhost(req) ? res.send(cache.config) : res.status(403).end());
+
+    app.patch('/config', async (req, res) => isThisLocalhost(req) ?
         fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
             if (err) {
                 console.error(err);
@@ -192,19 +199,25 @@ const runHTTPService = async () => {
 
 const runIOTService = async () => {
 
-    const updateConfig = ({ ts, raw, IMEI }) => {
-        cache.config.IMEIsConfig[IMEI] ??= { IMEI, alias: null, grupos: [], latitud: null, longitud: null, esclavos: [] };
-        const IMEIConfig = cache.config.IMEIsConfig[IMEI];
-        const esclavoN = getSlaveN(raw);
-        IMEIConfig[esclavoN] ??= { esclavoN, alias: null, msgsN: 0, ultimoMsgTs: ts, grafico: {} };
-        IMEIConfig[esclavoN].msgsN++;
-        IMEIConfig[esclavoN].ultimoMsgTs > ts && (IMEIConfig[esclavoN].ultimoMsgTs = ts);
+    const updateCache = ({ ts, raw, IMEI, esclavoN }) => {
+        const config = (cache.config[IMEI] ??= { IMEI, alias: null, grupos: [], latitud: null, longitud: null, esclavos: [] });
+        const status = (cache.status[IMEI] ??= { mensajesN: 0, ultimoMsgTs: 0, esclavos: [] });
+
+        config[esclavoN] ??= { esclavoN, alias: null, grafico: {} };
+        status[esclavoN] ??= { msgsN, ultimoMsgTs: ts };
+
+        status[esclavoN].msgsN++;
+        status[esclavoN].ultimoMsgTs > ts && (config[esclavoN].ultimoMsgTs = ts);
     };
 
-    const server = net.createServer();
+
     cache.config = JSON.parse(fs.readFileSync('./iotConfig.json'));
-    cache.messages = (await sql.get('Mensajes')).map(x => ({ ...x, ts: parseInt(x.timestamp) })).sort((a, b) => b.ts - a.ts).slice(0, CACHE_SIZE);
-    cache.messages.map(updateConfig);
+    cache.messages = (await sql.get('Mensajes'))
+        .map(x => ({ ...x, ts: parseInt(x.timestamp), IMEI: getIMEI(hexData), esclavoN: getSlaveN(x.raw) }))
+        .sort((a, b) => b.ts - a.ts)
+        .slice(0, CACHE_SIZE);
+
+    cache.messages.forEach(updateCache);
 
     server.on('connection', (socket) => {
 
@@ -214,9 +227,11 @@ const runIOTService = async () => {
             const onData = async (data) => {
                 const hexData = data.toString('hex');
                 log.info(`onData: ${hexData}`);
-                updateConfig({ ts: Date.now(), raw: hexData, IMEI: getIMEI(hexData) });
+                const IMEI = getIMEI(hexData);
+                const esclavoN = getSlaveN(hexData);
+                updateCache({ ts: Date.now(), raw: hexData, IMEI, esclavoN });
                 cache.count++;
-                cache.messages.unshift({ timestamp: Date.now(), raw: hexData, IMEI: getIMEI(hexData) });
+                cache.messages.unshift({ ts: Date.now(), raw: hexData, IMEI, esclavoN });
                 if (cache.messages.length > CACHE_SIZE) cache.messages.pop();
                 await sql.add('Mensajes', { Timestamp: Date.now(), Raw: hexData });
                 socket.write(`OK`);
