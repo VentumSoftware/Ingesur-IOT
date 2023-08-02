@@ -189,6 +189,7 @@ const runHTTPService = async () => {
                 res.status(500).end();
             } else {
                 cache.config = req.body;
+                console.log('Config updated');
                 res.send({ status: 'OK' });
             }
         }) :
