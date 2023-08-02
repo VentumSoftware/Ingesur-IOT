@@ -9,7 +9,6 @@ const HTTP_PORT = 3000;
 const WHITELIST = ['::ffff:12.47.179.11'];
 const CACHE_SIZE = 100000;
 const isThisLocalhost = (req) => {
-    return true;
     var ip = req.connection.remoteAddress;
     var host = req.get('host');
     return ip === "127.0.0.1" || ip === "::ffff:127.0.0.1" || ip === "::1" || host.indexOf("localhost") !== -1;
@@ -182,7 +181,7 @@ const runHTTPService = async () => {
     app.get('/config', async (req, res) => isThisLocalhost(req) ? res.send(cache.config) : res.status(403).end());
 
     app.patch('/config', async (req, res) => isThisLocalhost(req) ?
-        fs.writeFile('./iotConfig.json', JSON.stringify({ ...cache.config, ...req.body }), (err) => {
+        fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
             if (err) {
                 console.error(err);
                 res.status(500).end();
