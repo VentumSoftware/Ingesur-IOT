@@ -168,6 +168,7 @@ const cache = { messages: [], config: JSON.parse(fs.readFileSync('./iotConfig.js
 
 const runHTTPService = async () => {
     const app = express();
+    app.use(express.json());
 
     app.get('/mensajes', async (req, res) => isThisLocalhost(req) ? res.send(cache.messages) : res.status(403).end());
 
@@ -182,7 +183,7 @@ const runHTTPService = async () => {
     app.get('/config', async (req, res) => isThisLocalhost(req) ? res.send(cache.config) : res.status(403).end());
 
     app.patch('/config', async (req, res) => isThisLocalhost(req) ?
-        fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
+        console.log(req.body) || fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
             if (err) {
                 console.error(err);
                 res.status(500).end();
