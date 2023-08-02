@@ -183,13 +183,13 @@ const runHTTPService = async () => {
     app.get('/config', async (req, res) => isThisLocalhost(req) ? res.send(cache.config) : res.status(403).end());
 
     app.patch('/config', async (req, res) => isThisLocalhost(req) ?
-        console.log(req.body) || fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
+        fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
             if (err) {
                 console.error(err);
                 res.status(500).end();
             } else {
                 cache.config = req.body;
-                res.send('Ok');
+                res.send({ status: 'OK' });
             }
         }) :
         res.status(403).end()
