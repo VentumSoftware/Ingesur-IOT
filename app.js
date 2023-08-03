@@ -177,9 +177,9 @@ const runHTTPService = async () => {
     app.get('/mensajes/:IMEI', async (req, res) => isThisLocalhost(req) ?
         res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI)) : res.status(403).end());
 
-    app.get('/status', async (req, res) => isThisLocalhost(req) ? res.send(cache.status) : res.status(403).end());
+    app.get('/status', async (req, res) => isThisLocalhost(req) ? console.log('GET:status', cache.status) || res.send(cache.status) : res.status(403).end());
 
-    app.get('/config', async (req, res) => isThisLocalhost(req) ? res.send(cache.config) : res.status(403).end());
+    app.get('/config', async (req, res) => isThisLocalhost(req) ? console.log('GET:config', cache.config) || res.send(cache.config) : res.status(403).end());
 
     app.patch('/config', async (req, res) => isThisLocalhost(req) ?
         fs.writeFile('./iotConfig.json', JSON.stringify(req.body), (err) => {
