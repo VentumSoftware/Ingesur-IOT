@@ -215,7 +215,7 @@ const runIOTService = async () => {
 
     cache.config = JSON.parse(fs.readFileSync('./iotConfig.json'));
     cache.messages = (await sql.get('Mensajes'))
-        .map(x => ({ ...x, ts: parseInt(x.timestamp), IMEI: getIMEI(x.raw), esclavoN: getSlaveN(x.raw) }))
+        .map(x => ({  ts: parseInt(x.timestamp), IMEI: getIMEI(x.raw), esclavoN: getSlaveN(x.raw), raw: x.raw }))
         .sort((a, b) => b.ts - a.ts)
         .slice(0, CACHE_SIZE);
 
