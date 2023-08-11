@@ -9,6 +9,7 @@ const HTTP_PORT = 3000;
 const WHITELIST = ['::ffff:12.47.179.11'];
 const CACHE_SIZE = 100000;
 const isThisLocalhost = (req) => {
+    return true;
     var ip = req.connection.remoteAddress;
     var host = req.get('host');
     return ip === "127.0.0.1" || ip === "::ffff:127.0.0.1" || ip === "::1" || host.indexOf("localhost") !== -1;
@@ -169,13 +170,14 @@ const runHTTPService = async () => {
     const app = express();
     app.use(express.json());
 
-    app.get('/mensajes', async (req, res) => isThisLocalhost(req) ? res.send(cache.messages) : res.status(403).end());
-
     app.get('/mensajes/:IMEI/:esclavo', async (req, res) => isThisLocalhost(req) ?
-        res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI && x.esclavoN === parseInt(req.params.esclavo))) : res.status(403).end());
+    res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI && x.esclavoN === parseInt(req.params.esclavo))) : res.status(403).end());
 
     app.get('/mensajes/:IMEI', async (req, res) => isThisLocalhost(req) ?
-        res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI)) : res.status(403).end());
+    res.send(cache.messages.filter(x => x.IMEI === req.params.IMEI)) : res.status(403).end());
+
+
+    app.get('/mensajes', async (req, res) => isThisLocalhost(req) ? res.send(cache.messages) : res.status(403).end());
 
     app.get('/status', async (req, res) => isThisLocalhost(req) ? console.log('GET:status', cache.status) || res.send(cache.status) : res.status(403).end());
 
